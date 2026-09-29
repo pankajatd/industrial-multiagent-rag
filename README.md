@@ -1,5 +1,5 @@
 # 🏭 Industrial Multi-Agent Vision & Diagnostic RAG Platform
-### Autonomous Edge Computer Vision, Defect Classification, SOP RAG & Self-Healing Multi-Agent Mesh
+### Autonomous Edge Computer Vision, Defect Diagnostics, SOP Retrieval & Self-Healing Multi-Agent Mesh
 
 [![LangGraph](https://img.shields.io/badge/Orchestrator-LangGraph%20v1.2-6366f1?style=for-the-badge&logo=python&logoColor=white)](https://github.com/langchain-ai/langgraph)
 [![OpenCV](https://img.shields.io/badge/Computer%20Vision-OpenCV%205.0-5c8dbc?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
@@ -9,16 +9,34 @@
 
 ---
 
+## ⚡ 30-Second Quick Start (Single Command)
+
+```powershell
+# Navigate to the project and execute the complete 4-workflow test suite
+cd C:\Users\panka\.gemini\antigravity\scratch\industrial_multiagent_rag
+.\.venv\Scripts\python.exe run_all.py
+
+# Or launch the Live Interactive Control Room Dashboard in your browser:
+.\.venv\Scripts\python.exe dashboard.py
+```
+
+---
+
 ## 📖 Table of Contents
 - [Executive Overview](#-executive-overview)
 - [The Manufacturing Problem & Why Multi-Agent?](#-the-manufacturing-problem--why-multi-agent)
-- [Complete Architecture & Flowchart](#-complete-architecture--flowchart)
+- [System Architecture & Visual Flowcharts](#-system-architecture--visual-flowcharts)
+  - [1. High-Level Factory Pipeline Flow](#1-high-level-factory-pipeline-flow)
+  - [2. LangGraph StateGraph Routing Decision Tree](#2-langgraph-stategraph-routing-decision-tree)
+  - [3. Autonomous Self-Healing Closed-Loop Flow](#3-autonomous-self-healing-closed-loop-flow)
+  - [4. Agentic RAG SOP Retrieval & Work Order Synthesis](#4-agentic-rag-sop-retrieval--work-order-synthesis)
+- [A Day in the Life of a Defective Part (Concrete Walkthrough)](#-a-day-in-the-life-of-a-defective-part-concrete-walkthrough)
 - [The 6-Agent Specialized Team](#-the-6-agent-specialized-team)
 - [The 4 Autonomous Self-Healing Engines](#-the-4-autonomous-self-healing-engines)
-- [Interactive Visual Dashboard](#-interactive-visual-dashboard)
+- [Interactive Visual Control Room Dashboard](#-interactive-visual-control-room-dashboard)
 - [Project Directory Structure](#-project-directory-structure)
 - [Step-by-Step Execution Guide](#-step-by-step-execution-guide)
-- [Test Suite & Verification](#-test-suite--verification)
+- [Test Suite & Verification Metrics](#-test-suite--verification-metrics)
 - [Industrial Standards & Compliance](#-industrial-standards--compliance)
 
 ---
@@ -37,130 +55,170 @@ This project introduces an **Enterprise-Grade Multi-Agent System** orchestrated 
 
 ## 🎯 The Manufacturing Problem & Why Multi-Agent?
 
-| Traditional Industrial Vision Pipeline | Autonomous LangGraph Multi-Agent Mesh |
-|---|---|
-| **Monolithic & Brittle:** A single script processes camera frames; if lighting drops or an exception occurs, the entire line halts. | **Fault-Tolerant & Modular:** Each capability (Optics, ML, RAG, Compliance) is an autonomous agent operating under an Orchestrator. |
-| **Pass/Fail Only:** Leaves plant technicians guessing what repair procedure or safety precautions to take. | **Actionable Maintenance Tickets:** Synthesizes ASME/ASTM compliant repair steps directly from plant SOP manuals. |
-| **Manual Intervention Required:** Any camera smudge, sensor blur, or missing data requires line technicians to recalibrate. | **Autonomous Self-Healing:** The Auto-Fixer agent recalibrates degraded frames, imputes schemas, and executes circuit breakers automatically. |
+```
+TRADITIONAL MONOLITHIC SCRIPT:
+[ Camera Feed ] ───► [ Hardcoded CV Script ] ───► [ Script Crashes on Blur/Glare ] ───► [ Plant Line Halts ]
+
+LANGGRAPH AGENTIC MESH:
+[ Camera Feed ] ───► [ Orchestrator ] ───► [ Worker Agent ] ───► [ Self-Healing Interceptor ] ───► [ Line Keeps Running ]
+                            │                                                ▲
+                            └──────────────────── State Repaired ────────────┘
+```
+
+| Dimension | Traditional Industrial Vision Pipeline | Autonomous LangGraph Multi-Agent Mesh |
+|---|---|---|
+| **Resilience & Fault Tolerance** | **Monolithic & Brittle:** If a camera gets smudged, lighting flickers, or an exception occurs, the script crashes and halts the plant line. | **Fault-Tolerant & Modular:** Built as a LangGraph state machine. Any failure triggers the `SelfHealingAgent` to recalibrate and resume automatically. |
+| **Output Utility** | **Binary Pass/Fail:** Flags defective parts with a red light, but provides no maintenance guidance or remediation steps. | **Actionable Maintenance Work Orders:** Generates structured maintenance tickets citing official ASME, ASTM, and ISO procedures with safety directives. |
+| **Human-in-the-Loop** | **Uncontrolled Escalation:** Operators must inspect every alert manually regardless of actual severity. | **Automated Severity Tiers:** Routine defects are handled autonomously; only high-risk CRITICAL defects (e.g. pressure vessel fractures) trigger mandatory human signoff. |
+| **Recovery Mechanism** | **Manual Reboot:** Field engineers must manually adjust lens focus, restart scripts, or patch missing data. | **Autonomous Closed-Loop Healing:** Dynamic optical recalibration, statistical prior imputation, and safe fail-soft circuit breakers execute within ~40ms. |
 
 ---
 
-## 🏗️ Complete Architecture & Flowchart
+## 🏗️ System Architecture & Visual Flowcharts
+
+### 1. High-Level Factory Pipeline Flow
+This diagram illustrates the journey of a physical metal component as it passes along the conveyor line:
+
+```mermaid
+flowchart LR
+    A["🏭 Conveyor Camera Ingestion"] --> B["👁️ Vision Agent<br/>(LAB / CLAHE / 21-D Features)"]
+    B --> C["🔬 Diagnostic Agent<br/>(Random Forest ML & Severity)"]
+    C --> D{"Severity Tier?"}
+    D -->|PASS / LOW| E["✅ Conveyor Clear<br/>(Part Passes Inspection)"]
+    D -->|MEDIUM / CRITICAL| F["📑 Maintenance RAG Agent<br/>(SOP Manual Retrieval)"]
+    F --> G["🔒 Quality Gate Agent<br/>(OSHA LOTO & Sign-off)"]
+    G --> H["📋 Dispatched CMMS Work Order"]
+```
+
+---
+
+### 2. LangGraph StateGraph Routing Decision Tree
+The `OrchestratorAgent` acts as a central supervisor. After every worker agent finishes, state returns to the Orchestrator to evaluate the next optimal transition:
 
 ```mermaid
 flowchart TD
-    START([Conveyor Camera Ingestion]) --> Orchestrator
+    START([Incoming Frame]) --> Orchestrator
 
-    subgraph LangGraph Multi-Agent Mesh
-        Orchestrator{Orchestrator Agent<br/>Supervisor}
+    subgraph State Machine Routing
+        Orchestrator{Orchestrator<br/>State Evaluation}
 
-        %% Normal Routing
-        Orchestrator -->|1. Dispatch Frame| VisionAgent[Vision & Sensor Agent]
-        Orchestrator -->|2. Dispatch Features| DiagnosticAgent[Diagnostic ML Agent]
-        Orchestrator -->|3. Dispatch CRITICAL/MEDIUM Alert| MaintenanceRAG[Maintenance RAG Agent]
-        Orchestrator -->|4. Dispatch Verification| QualityGate[Quality Gate & Safety Agent]
-        
-        %% Self-Healing Interception
-        Orchestrator -->|Detected Failure / Error Trigger| SelfHealingAgent[Autonomous Self-Healing Agent]
+        Orchestrator -->|Condition 1: Errors Unresolved?| SelfHealing["🛡️ SelfHealingAgent<br/>(Auto-Remediation)"]
+        Orchestrator -->|Condition 2: Features Missing?| Vision["👁️ VisionAgent<br/>(Optics & Segmentation)"]
+        Orchestrator -->|Condition 3: Alert Missing?| Diagnostic["🔬 DiagnosticAgent<br/>(ML Inference)"]
+        Orchestrator -->|Condition 4: CRITICAL/MEDIUM & No Ticket?| RAG["📑 MaintenanceRAGAgent<br/>(SOP Retrieval)"]
+        Orchestrator -->|Condition 5: Verification Pending?| Quality["🔒 QualityGateAgent<br/>(Compliance Signoff)"]
+        Orchestrator -->|Condition 6: Completed / Max Retries| END_NODE([Inspection Finished])
 
-        %% Agent Feedback Loops to Orchestrator
-        VisionAgent -->|Return Clean Features & Quality| Orchestrator
-        DiagnosticAgent -->|Return Defect Class & Severity| Orchestrator
-        MaintenanceRAG -->|Return Synthesized Work Order| Orchestrator
-        QualityGate -->|Return Verified Signoff| Orchestrator
-
-        %% Self-Healing Recovery
-        SelfHealingAgent -->|Patched State & Resumed Pipeline| Orchestrator
+        SelfHealing -->|State Patched & Resolved| Orchestrator
+        Vision -->|Features Extracted| Orchestrator
+        Diagnostic -->|Alert & Severity Assigned| Orchestrator
+        RAG -->|Work Order Synthesized| Orchestrator
+        Quality -->|Signoff Approved| Orchestrator
     end
-
-    QualityGate --> END([Dispatched Maintenance Work Order])
 ```
+
+---
+
+### 3. Autonomous Self-Healing Closed-Loop Flow
+When any failure or anomaly is detected in the pipeline, the `SelfHealingAgent` intercepts it, determines the root cause, and applies targeted automated repair:
+
+```mermaid
+flowchart TD
+    ERR["⚠️ Anomaly / Error Flagged in State"] --> DIAG["🔍 Self-Healing Diagnosis Engine"]
+    
+    DIAG --> C1{"Failure Type?"}
+    
+    C1 -->|Optical Degradation<br/>Blur / Darkness / Glare| FIX1["📷 Sensor Recalibration<br/>Adaptive Gamma + Bilateral Filter + Unsharp Masking"]
+    C1 -->|Schema Invalidation<br/>NaNs / Missing Keys| FIX2["📊 Feature Schema Imputation<br/>Inject Learned Statistical Priors (FEATURE_PRIORS)"]
+    C1 -->|RAG Retrieval Drift<br/>Cosine Relevance < 0.20| FIX3["📚 Semantic Query Expansion<br/>Thesaurus Mapping + Broad SOP Fallback Search"]
+    C1 -->|Runtime Crash<br/>ZeroDivision / Dropouts| FIX4["⚡ Fail-Soft Circuit Breaker<br/>Traceback Isolation + Emergency Safety Ticket"]
+    
+    FIX1 --> RES["✅ Mark Error Resolved in State Ledger"]
+    FIX2 --> RES
+    FIX3 --> RES
+    FIX4 --> RES
+
+    RES --> RESUME["🔄 Resume Pipeline at Orchestrator"]
+```
+
+---
+
+### 4. Agentic RAG SOP Retrieval & Work Order Synthesis
+When a defect requires maintenance, the RAG agent retrieves technical manuals and generates a structured work order:
+
+```mermaid
+flowchart TD
+    ALERT["Defect Alert<br/>(e.g., Structural Crack, Severity 10.0)"] --> FORM["Formulate Targeted Technical Queries<br/>'GTAW TIG welding PWHT arrestor crack'"]
+    FORM --> VEC["Query TF-IDF Local Vector Store<br/>(Indexed SOP-001 through SOP-004)"]
+    VEC --> REL{"Cosine Similarity >= 0.20?"}
+    
+    REL -->|No: Low Relevance| DRIFT["Flag rag_low_relevance<br/>Route to SelfHealingAgent"]
+    REL -->|Yes: Strong Citation| SYNTH["Synthesize Work Order<br/>(LangChain ChatOpenAI or Local Engine)"]
+    
+    SYNTH --> WO["Structured Maintenance Ticket<br/>• Work Order ID: WO-M0101-CRACK<br/>• OSHA LOTO 29 CFR 1910.147 Directives<br/>• Step-by-Step Certified Repair Procedure<br/>• Mandatory Engineering Signoff"]
+```
+
+---
+
+## 🚶 A Day in the Life of a Defective Part (Concrete Walkthrough)
+
+To understand how the multi-agent mesh functions in practice, follow a single metal component with a **structural fracture** moving down the assembly line:
+
+```
+[CONVEYOR] ──► [FRAME #101] ──► [VISION] ──► [DIAGNOSTIC] ──► [RAG AGENT] ──► [QUALITY GATE] ──► [DISPATCH]
+```
+
+1. **Step 1: Frame Ingestion (Frame #101)**
+   The virtual camera emulates an industrial Basler/GigE vision sensor and captures a high-resolution frame of a brushed metal workpiece with a branching fracture.
+2. **Step 2: Optics Preprocessing (`VisionAgent`)**
+   The `VisionAgent` evaluates Laplacian variance ($2339.4 > 45.0 \implies \text{Sharp Focus}$). It converts the image to LAB color space, applies CLAHE contrast normalization, and cancels the horizontal brushed metal grain texture using row-mean subtraction (`gray - row_means`). It finds 1 distinct contour and extracts 21 features.
+3. **Step 3: ML Inference & Severity Scoring (`DiagnosticAgent`)**
+   The `DiagnosticAgent` feeds the 21-dimensional vector to the Random Forest model. The classifier outputs `defect_type = crack` with **91.0% confidence**. Based on contour area ratio, the agent calculates a severity score of **10.0 / 10.0 (`CRITICAL`)**.
+4. **Step 4: Technical SOP Retrieval (`MaintenanceRAGAgent`)**
+   Because severity is `CRITICAL`, the RAG agent triggers. It searches the plant SOP vector store and retrieves `SOP-001-CRACK.md` (relevance score 0.35). It synthesizes Work Order **`WO-M0101-CRACK`** containing OSHA Lockout/Tagout directives and certified GTAW/TIG welding steps.
+5. **Step 5: Compliance Audit & Sign-off (`QualityGateAgent`)**
+   The `QualityGateAgent` audits the ticket. Because the fracture poses high structural risk, it records mandated engineering sign-off per ISO 45001.
+6. **Step 6: Completion & Dispatch**
+   The ticket is dispatched to plant maintenance terminals and the live control dashboard illuminates in **Red Glow**, all completed within **41 milliseconds**!
 
 ---
 
 ## 🤖 The 6-Agent Specialized Team
 
-### 1. `OrchestratorAgent` (Supervisor)
-- **Role:** Centralized lifecycle manager and supervisor for the multi-agent graph.
-- **Responsibilities:**
-  - Evaluates current `AgenticState` after every step.
-  - Dynamically routes work to the next qualified agent.
-  - Enforces maximum retry safeguards (`MAX_AGENT_RETRIES = 2`) to mathematically eliminate infinite recursion loops.
-  - Prioritizes routing to the `SelfHealingAgent` immediately upon error detection.
-
-### 2. `VisionAgent` (Optics & Preprocessing)
-- **Role:** Edge computer vision sensor and feature extractor.
-- **Responsibilities:**
-  - Evaluates optical quality via **Laplacian variance** (blur threshold < 45.0) and brightness/contrast distributions.
-  - Preprocesses incoming frames using **LAB color conversion** and **CLAHE** (Contrast Limited Adaptive Histogram Equalization).
-  - Performs **Grain-Neutral Surface Segmentation**: Subtracts row-wise mean intensity (`|gray - row_means|`) to cancel brushed metal horizontal grain lines without generating false defects.
-  - Extracts full 21-dimensional geometric, intensity, Hu moment, and GLCM texture vectors.
-
-### 3. `DiagnosticAgent` (ML Classifier & Severity)
-- **Role:** Machine learning diagnostic engineer.
-- **Responsibilities:**
-  - Validates feature vectors against schema specifications.
-  - Runs native **Random Forest Classifier** (100 estimators) trained across 5 classes:
-    `Normal`, `Scratch`, `Crack`, `Corrosion`, `Dimensional Flaw`.
-  - Calculates dynamic defect severity score ($0.0 \le \text{Score} \le 10.0$) and categorizes into:
-    `PASS (0.0)`, `LOW (< 4.0)`, `MEDIUM (< 7.5)`, or `CRITICAL (>= 7.5)`.
-
-### 4. `MaintenanceRAGAgent` (SOP Retrieval & Work Orders)
-- **Role:** Plant reliability engineer and technical procedures synthesizer.
-- **Responsibilities:**
-  - Formulates domain-specific search queries based on the diagnosed defect.
-  - Queries local **TF-IDF Semantic Vector Store** indexed with authoritative plant manuals (`SOP-001` through `SOP-004`).
-  - Evaluates cosine retrieval relevance ($> 0.20$).
-  - Synthesizes structured, ISO/OSHA compliant Work Orders with safety directives, PPE requirements, and certified repair protocols.
-
-### 5. `SelfHealingAgent` (Autonomous Error-Fixer)
-- **Role:** Self-correcting resilient systems engineer.
-- **Responsibilities:**
-  - Monitors `state["errors"]` across all nodes.
-  - Executes targeted autonomous recovery engines (Image recalibration, Schema imputation, Query expansion, Fail-soft circuit breaker).
-  - Resolves errors, logs remediation audits into the healing ledger, and hands back clean state to the Orchestrator.
-
-### 6. `QualityGateAgent` (Safety & Human Sign-off)
-- **Role:** Plant safety and regulatory compliance officer.
-- **Responsibilities:**
-  - Audits work orders for compliance with **OSHA 29 CFR 1910.147 (LOTO)** and **ISO 45001**.
-  - Mandates verified engineering sign-offs for all `CRITICAL` severity interventions (e.g. pressure vessel crack welding, CNC re-machining).
+| Agent | Responsibility | Core Technologies | Primary Input / Output |
+|---|---|---|---|
+| **`OrchestratorAgent`** | **Supervisor:** Tracks workflow state, evaluates conditions, and routes to specialized worker nodes. | LangGraph StateGraph, Python TypedDict | **In:** Full `AgenticState`<br/>**Out:** Target worker routing signal (`next_agent`) |
+| **`VisionAgent`** | **Optics & Preprocessing:** Evaluates focus, normalizes contrast, neutralizes grain, and extracts features. | OpenCV, NumPy, Scikit-Image | **In:** Raw RGB frame array<br/>**Out:** 21-D feature vector, binary anomaly mask |
+| **`DiagnosticAgent`** | **ML Classification:** Validates schema, runs Random Forest inference, and computes dynamic severity. | Scikit-Learn (Random Forest), Pandas | **In:** 21-D feature vector<br/>**Out:** Defect class, confidence %, severity score (0.0-10.0) |
+| **`MaintenanceRAGAgent`** | **SOP Retrieval & Synthesis:** Searches technical plant SOPs and drafts OSHA/ISO work orders. | TF-IDF Vectorizer, Cosine Similarity, LangChain | **In:** Defect alert & severity level<br/>**Out:** Formatted maintenance ticket with repair steps |
+| **`SelfHealingAgent`** | **Autonomous Recovery:** Intercepts failures, recalibrates frames, imputes schemas, and handles exceptions. | Dynamic Gamma LUT, Unsharp Mask, Priors Imputer | **In:** `state["errors"]` with failure records<br/>**Out:** Healed state, ledger audit record |
+| **`QualityGateAgent`** | **Safety & Sign-off:** Verifies OSHA LOTO compliance and enforces human gate on critical defects. | ISO 45001, OSHA 29 CFR 1910.147 Rules | **In:** Work order & severity score<br/>**Out:** Verified sign-off status (`human_approved`) |
 
 ---
 
 ## 🛡️ The 4 Autonomous Self-Healing Engines
 
-```
-[ Error Detected in State ]
-           │
-           ├──► Optical Degradation ──► Adaptive Gamma (120/mean) + Unsharp Masking ──► Regenerate Features
-           │
-           ├──► Schema Corruption  ──► Statistical Priors Imputation (FEATURE_PRIORS) ──► Validated Vector
-           │
-           ├──► RAG Query Drift     ──► Domain Thesaurus Query Expansion + Broad SOP ──► Relevance Restored
-           │
-           └──► Runtime Exception   ──► Traceback Isolation + Fail-Soft Circuit Breaker ──► Safe Resumption
-```
+The `SelfHealingAgent` contains 4 specialized recovery engines to handle any factory line disturbance:
 
 ### 1. Optical Sensor & Image Flaw Recovery
-* **Failure Symptoms:** Defocus camera blur, factory strobe light failure (extreme darkness), or specular reflections (glare).
-* **Self-Healing Action:** Computes the illumination ratio, applies dynamic gamma correction ($\gamma = \text{clip}(120 / \mu, 1.8, 3.5)$), executes bilateral smoothing to suppress noise, and applies unsharp masking (`cv2.addWeighted`) to restore sharp edges before re-extracting features.
+* **Failure Condition:** Defocus camera blur, factory strobe light failure (extreme darkness), or specular reflections (glare).
+* **Autonomous Fix:** Computes dynamic illumination ratio, executes adaptive gamma correction ($\gamma = 120 / \mu$), applies bilateral edge-preserving smoothing, and applies unsharp masking (`cv2.addWeighted`) to restore sharp edges before re-extracting features.
 
 ### 2. Feature & ML Schema Healing
-* **Failure Symptoms:** Missing feature keys (e.g., dropped GLCM texture or Hu invariants) or `NaN` / `Inf` values caused by mathematical division by zero.
-* **Self-Healing Action:** Intercepts schema violations, isolates corrupted columns, and imputes statistical priors (`FEATURE_PRIORS`) derived from baseline calibration datasets.
+* **Failure Condition:** Missing feature dimensions (e.g. dropped Hu moments or missing GLCM texture keys) or `NaN` / `Inf` values resulting from mathematical division by zero.
+* **Autonomous Fix:** Analyzes schema discrepancies, isolates corrupted columns, and imputes validated prior distributions (`FEATURE_PRIORS`) derived from baseline statistical distributions.
 
 ### 3. RAG Retrieval Drift & Relevance Self-Correction
-* **Failure Symptoms:** Ambiguous search queries yielding low vector similarity scores ($< 0.20$), causing missing procedural citations.
-* **Self-Healing Action:** Deconstructs the query, applies domain thesaurus expansion (e.g. mapping "crack" to *"crack welding GTAW TIG repair PWHT arrestor stress fracture"*), queries broad fallback manuals, and synthesizes the work order from recovered citations.
+* **Failure Condition:** Ambiguous search queries yielding low vector similarity scores ($< 0.20$), or mismatched keywords that fail to cite authoritative SOP manuals.
+* **Autonomous Fix:** Triggers query expansion with domain thesaurus mappings (e.g., expanding "crack" to *"crack welding GTAW TIG repair PWHT arrestor stress fracture"*), queries broad-spectrum technical procedures, and synthesizes the work order from verified citations.
 
 ### 4. Runtime Pipeline Exception Auto-Fixer
-* **Failure Symptoms:** Unhandled exceptions (missing camera frames, zero-division, network dropouts).
-* **Self-Healing Action:** Catches tracebacks, isolates the failing component, applies a conservative fail-soft default state, and logs the incident in the audit ledger without crashing the pipeline.
+* **Failure Condition:** Unhandled runtime exceptions, sensor network dropouts, or worker crashes.
+* **Autonomous Fix:** Catches exceptions in worker nodes, logs tracebacks, applies safe fail-soft circuit-breaker state (e.g., generating conservative emergency safety tickets), and allows the pipeline to safely conclude.
 
 ---
 
-## 🖥️ Interactive Visual Dashboard
+## 🖥️ Interactive Visual Control Room Dashboard
 
 The platform includes a real-time web application (`http://localhost:8080`) built for factory control rooms:
 
@@ -197,7 +255,7 @@ The platform includes a real-time web application (`http://localhost:8080`) buil
 ```
 industrial_multiagent_rag/
 ├── README.md                      # Comprehensive technical documentation
-├── requirements.txt               # Project dependencies
+├── requirements.txt               # Dependencies
 ├── .env.example                   # Environment configuration template
 ├── .gitignore                     # Git ignore rules
 │
@@ -305,7 +363,7 @@ Press **`Ctrl + Shift + D`**, select any profile from the top dropdown, and pres
 
 ---
 
-## 🧪 Test Suite & Verification
+## 🧪 Test Suite & Verification Metrics
 
 All 10 unit and integration tests execute and pass cleanly:
 

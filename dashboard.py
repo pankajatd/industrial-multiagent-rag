@@ -112,6 +112,7 @@ class DashboardRequestHandler(SimpleHTTPRequestHandler):
             initial_state = {
                 "frame_index": frame_idx,
                 "raw_frame": clean_frame,
+                "target_defect": target_defect,
                 "execution_log": [f"[Conveyor] Ingested frame #{frame_idx} (Target: {target_defect.upper()})."],
                 "errors": [],
                 "healing_actions": [],
@@ -227,10 +228,10 @@ def generate_dashboard_html():
 
         <div class="flex items-center gap-3 self-stretch md:self-auto justify-between">
             <div class="px-3.5 py-1.5 rounded-xl bg-gray-900 border border-gray-800 flex items-center gap-2.5">
-                <span id="conveyorLight" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="conveyorLight" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                 <div>
                     <div class="text-[10px] text-gray-400 font-mono">CONVEYOR</div>
-                    <div id="conveyorStatus" class="font-mono text-xs font-bold text-emerald-400">STREAMING</div>
+                    <div id="conveyorStatus" class="font-mono text-xs font-bold text-amber-400">STANDBY</div>
                 </div>
             </div>
             <div class="px-3.5 py-1.5 rounded-xl bg-gray-900 border border-gray-800 flex items-center gap-2.5">
@@ -249,14 +250,14 @@ def generate_dashboard_html():
             
             <!-- Video / Conveyor Controls -->
             <div class="flex items-center gap-2">
-                <button id="btnPlayPause" onclick="togglePlayPause()" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition">
+                <button id="btnPlayPause" onclick="togglePlayPause()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center gap-2 transition cursor-pointer">
                     <svg id="playIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    <span id="playBtnText">PAUSE STREAM</span>
+                    <span id="playBtnText">START AUTO-STREAM</span>
                 </button>
-                <button onclick="stepPrev()" class="p-2 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition" title="Previous Frame">
+                <button onclick="stepPrev()" class="p-2 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer" title="Previous Frame">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <button onclick="stepNext()" class="p-2 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition" title="Next Frame">
+                <button onclick="stepNext()" class="p-2 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition cursor-pointer" title="Next Frame">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </button>
 
@@ -272,34 +273,20 @@ def generate_dashboard_html():
                 </div>
             </div>
 
-            <!-- Target Defect Selector -->
-            <div class="flex items-center gap-2">
-                <label class="text-[11px] font-mono text-gray-400">INSPECT DEFECT:</label>
+            <!-- Target Defect Selector & Execute Button -->
+            <div class="flex items-center gap-2.5">
+                <label class="text-[11px] font-mono text-gray-300 font-semibold tracking-wide">INSPECT DEFECT:</label>
                 <select id="defectSelect" onchange="onManualSelectionChange()" class="bg-gray-800 border border-gray-700 text-gray-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500 font-mono">
-                    <option value="auto" selected>Auto-Cycle Conveyor</option>
-                    <option value="normal">Normal (Pass)</option>
-                    <option value="scratch">Surface Scratch</option>
                     <option value="crack">Branching Crack</option>
+                    <option value="scratch">Surface Scratch</option>
                     <option value="corrosion">Oxidation Corrosion</option>
                     <option value="dimensional">Dimensional Notch</option>
+                    <option value="normal">Normal (Pass)</option>
                 </select>
-            </div>
-
-            <!-- ERROR INJECTION SELECTOR (Requested Feature) -->
-            <div class="flex items-center gap-2">
-                <label class="text-[11px] font-mono text-rose-400 flex items-center gap-1 font-bold">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    INJECT ERROR:
-                </label>
-                <select id="errorSelect" onchange="onManualSelectionChange()" class="bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-rose-400 font-mono font-semibold">
-                    <option value="none" selected>None (Nominal Operation)</option>
-                    <option value="blur">1. Camera Defocus Blur</option>
-                    <option value="darkness">2. Sensor Underexposure (Darkness)</option>
-                    <option value="glare">3. Specular Glare (Overexposure)</option>
-                    <option value="schema">4. Feature Schema Corruption (NaN)</option>
-                    <option value="rag">5. RAG Retrieval Query Drift</option>
-                    <option value="exception">6. Worker Runtime Crash</option>
-                </select>
+                <button id="btnExecuteDefect" onclick="executeDefectPipeline()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+                    <span>EXECUTE</span>
+                </button>
             </div>
 
         </div>
@@ -502,14 +489,25 @@ def generate_dashboard_html():
 
     <!-- Client Controller Script -->
     <script>
-        let currentFrameIndex = 1;
-        let isPlaying = true;
+        let currentFrameIndex = 101;
+        let isPlaying = false;
         let streamTimer = null;
         let playbackIntervalMs = 2000;
 
+        function executeDefectPipeline() {
+            pauseStream(); // Never auto-advance; static evaluation
+            currentFrameIndex++;
+            fetchFrameStep();
+        }
+
         async function fetchFrameStep() {
             const defectChoice = document.getElementById("defectSelect").value;
-            const errorChoice = document.getElementById("errorSelect").value;
+            const errorChoice = "none";
+            const execBtn = document.getElementById("btnExecuteDefect");
+            if (execBtn) {
+                execBtn.innerHTML = '<span class="inline-block animate-spin">⚙️</span> Running...';
+                execBtn.disabled = true;
+            }
 
             try {
                 const res = await fetch(`/api/step?frame=${currentFrameIndex}&defect=${defectChoice}&error=${errorChoice}`);
@@ -517,6 +515,11 @@ def generate_dashboard_html():
                 renderState(data);
             } catch (err) {
                 console.error("Step execution error:", err);
+            } finally {
+                if (execBtn) {
+                    execBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg><span>EXECUTE</span>';
+                    execBtn.disabled = false;
+                }
             }
         }
 
@@ -693,16 +696,16 @@ def generate_dashboard_html():
             if (isPlaying) {
                 txt.innerText = "PAUSE STREAM";
                 icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-                btn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition";
+                btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer";
                 light.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
                 statusTxt.innerText = "STREAMING";
                 statusTxt.className = "font-mono text-xs font-bold text-emerald-400";
             } else {
-                txt.innerText = "RESUME PLAY";
+                txt.innerText = "START AUTO-STREAM";
                 icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-                btn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition";
+                btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center gap-2 transition cursor-pointer";
                 light.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
-                statusTxt.innerText = "PAUSED";
+                statusTxt.innerText = "STANDBY";
                 statusTxt.className = "font-mono text-xs font-bold text-amber-400";
             }
         }
@@ -729,13 +732,24 @@ def generate_dashboard_html():
         }
 
         function onManualSelectionChange() {
+            pauseStream();
+            currentFrameIndex++;
             fetchFrameStep();
         }
 
-        // Initialize on page load
+        // Initialize on page load in static inspection mode (no auto-advance)
         window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const defectParam = params.get("defect");
+            const frameParam = params.get("frame");
+            if (defectParam && document.getElementById("defectSelect")) {
+                document.getElementById("defectSelect").value = defectParam;
+            }
+            if (frameParam) {
+                currentFrameIndex = parseInt(frameParam) || 101;
+            }
+            pauseStream();
             fetchFrameStep();
-            startStream();
         };
     </script>
 </body>
